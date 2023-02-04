@@ -308,10 +308,10 @@
 // =============================================================================
 // Memory size
 #define PHYS_MEMORY_START		(0x00000000)
-#define PHYS_MEMORY_SIZE		(0x40000000)
-#define CONFIG_DDR3_ROW_SIZE	(3)
+#define PHYS_MEMORY_SIZE		(0x10000000)
+#define CONFIG_DDR3_ROW_SIZE	(2)
 #define CONFIG_DDR3_COL_SIZE	(2)
-#define CONFIG_DDR_ROW_BITS		(15)
+#define CONFIG_DDR_ROW_BITS		(14)
 
 // Auto detect memory
 #ifdef CONFIG_ACS
@@ -328,11 +328,12 @@
 #define CONFIG_SYS_MEMTEST_END			0x18000000	// 384MB
 
 // DDR clock: 408~804MHz with fixed step 12MHz
-// #define CFG_DDR_CLK		(636)
-#define CFG_DDR_CLK			(696)
+#define CFG_DDR_CLK		(636)
+//#define CFG_DDR_CLK	        (696)
 // #define CFG_DDR_CLK		(768)
 // #define CFG_DDR_CLK		(792)
-#define CFG_DDR_MODE		(CFG_DDR_32BIT)
+//#define CFG_DDR_MODE		(CFG_DDR_32BIT)
+#define CFG_DDR_MODE   CFG_DDR_16BIT_LANE01
 
 // DDR features
 // #define CONFIG_GATEACDDRCLK_DISABLE				// Disable DDR clock gating
