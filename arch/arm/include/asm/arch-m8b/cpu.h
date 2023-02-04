@@ -1,5 +1,4 @@
 /*
-
  *
  */
 
@@ -141,9 +140,7 @@
 /*          
 	//enable clock
 	writel(readl(P_DDR0_CLK_CTRL)|(1), P_DDR0_CLK_CTRL);
-
 	printf("training address: %x\n", M8BABY_GET_DT_ADDR(readl(P_DDR0_PUB_DTAR0), readl(P_DMC_DDR_CTRL)));
-
 	//disable clock
 	writel(readl(P_DDR0_CLK_CTRL) & (~1), P_DDR0_CLK_CTRL);  
 */
@@ -179,14 +176,19 @@
 #else
 #define CONFIG_SYS_SDRAM_BASE   0x00000000
 #define CONFIG_SYS_INIT_SP_ADDR (CONFIG_SYS_SDRAM_BASE+0xF00000)
+#if !defined(CONFIG_DDR3_256MB)
 #define CONFIG_SYS_TEXT_BASE    0x10000000
+#define CONFIG_SYS_LOAD_ADDR    0x12000000
+#else
+#define CONFIG_SYS_TEXT_BASE    0x8000000
+#define CONFIG_SYS_LOAD_ADDR    0x8200000
+#endif //!defined(CONFIG_DDR3_256MB)
 #define CONFIG_MMU_DDR_SIZE     ((PHYS_MEMORY_SIZE)>>20)
 #ifdef CONFIG_DDR_SIZE_AUTO_DETECT
 #undef CONFIG_MMU_DDR_SIZE
 #define CONFIG_MMU_DDR_SIZE    ((0x80000000)>>20)	//max 2GB
 #endif
-#define CONFIG_SYS_LOAD_ADDR    0x12000000
-#define CONFIG_DTB_LOAD_ADDR    0x0f000000
+#define CONFIG_DTB_LOAD_ADDR    (CONFIG_SYS_TEXT_BASE - 0x100000)
 #endif
 
 #define CONFIG_SECURE_UBOOT_SIZE     0x100000
