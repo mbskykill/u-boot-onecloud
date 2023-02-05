@@ -2,6 +2,7 @@
 #include <malloc.h>
 #include <asm/dma-mapping.h>
 #include <asm/arch/io.h>
+#include <asm/arch/romboot.h>
 #include <asm/arch/sdio.h>
 #include <mmc.h>
 #include <linux/err.h>
@@ -467,15 +468,15 @@ int find_dev_num_by_partition_name (char *name)
     int port=-1, port_xc, dev_num;
     struct mmc *mmc;
 
-    if (!strncmp(name, MMC_CARD_PARTITION_NAME, sizeof(MMC_CARD_PARTITION_NAME))) { // card
-        port = SDIO_PORT_B;
-        port_xc = SDIO_PORT_XC_B;
-    } else { // eMMC OR TSD
-        if (find_mmc_partition_by_name(name)) { // partition name is valid
+    if (find_mmc_partition_by_name(name)) { // partition name is valid
+        if(C_ROM_BOOT_DEBUG->boot_id != 1) { // boot from eMMC or USB
             port = SDIO_PORT_C;
             port_xc = SDIO_PORT_XC_C;
-        } // else port=-1
-    }
+        } else { // boot from SDCard
+            port = SDIO_PORT_B;
+            port_xc = SDIO_PORT_XC_B;
+        }
+    } // else port=-1
 
     if (port > 0) {
         mmc = find_mmc_device_by_port((unsigned)port);

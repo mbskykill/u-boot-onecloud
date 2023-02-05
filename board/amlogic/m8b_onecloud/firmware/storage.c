@@ -6,7 +6,7 @@
 struct partitions partition_table[]={
 	{
 		.name = "resource",
-		.size = 32 * SZ_1M,
+		.size = 4 * SZ_1M,
 		.mask_flags = STORE_DATA,
 	},
 	{

@@ -45,122 +45,159 @@ int env_init(void)
 
 void env_relocate_spec(void)
 {
-	extern void nand_env_relocate_spec(void);
-	extern void spi_env_relocate_spec(void);
-	extern void emmc_env_relocate_spec(void);
+#ifdef CONFIG_CMD_NAND
 #ifdef CONFIG_STORE_COMPATIBLE
-	if(device_boot_flag == NAND_BOOT_FLAG){
+	if(device_boot_flag == NAND_BOOT_FLAG) {
 #else
-	if(POR_NAND_BOOT()){
+	if(POR_NAND_BOOT()) {
 #endif
 		printk("NAND BOOT,nand_env_relocate_spec : %s %d \n",__func__,__LINE__);
 		env_name_spec = "NAND";
+		extern void nand_env_relocate_spec(void);
 		nand_env_relocate_spec();
+		return;
+	}
+#endif // CONFIG_CMD_NAND
+
+#ifdef CONFIG_CMD_SF
 #ifdef CONFIG_STORE_COMPATIBLE
-	}else if((device_boot_flag == SPI_NAND_FLAG)||(device_boot_flag == SPI_EMMC_FLAG)){
+	if((device_boot_flag == SPI_NAND_FLAG) || (device_boot_flag == SPI_EMMC_FLAG)) {
 #else
-	}else if(POR_SPI_BOOT()){
+	if(POR_SPI_BOOT()){
 #endif
 		printk("SPI BOOT,spi_env_relocate_spec : %s %d \n",__func__,__LINE__);
 		env_name_spec = "SPI Flash";
+		extern void spi_env_relocate_spec(void);
 		spi_env_relocate_spec();
+		return;
 	}
-#if defined(CONFIG_SPI_NAND_EMMC_COMPATIBLE) || defined(CONFIG_STORE_COMPATIBLE)
+#endif // CONFIG_CMD_SF
+
+#ifdef CONFIG_CMD_MMC
 #ifdef CONFIG_STORE_COMPATIBLE
-	else if(device_boot_flag == EMMC_BOOT_FLAG) {
+	if(device_boot_flag == EMMC_BOOT_FLAG) {
 #else
-	else if(POR_EMMC_BOOT()){
+	if(POR_EMMC_BOOT()){
 #endif
 		printk("MMC BOOT, emmc_env_relocate_spec : %s %d \n",__func__,__LINE__);
 		env_name_spec = "eMMC";
+		extern void emmc_env_relocate_spec(void);
 		emmc_env_relocate_spec();
+		return;
 	}
-#endif
-	else{
-		printk("BOOT FROM CARD? env_relocate_spec\n");
-		if(!run_command("sf probe 2", 0)){
-			printk("SPI BOOT, spi_env_relocate_spec %s %d \n",__func__,__LINE__);
-			env_name_spec = "SPI Flash";
-			spi_env_relocate_spec();
-		}else if(!run_command("nand exist", 0)){
-			printk("NAND BOOT, nand_env_relocate_spec %s %d \n",__func__,__LINE__);
-			env_name_spec = "NAND";
-			nand_env_relocate_spec();
-		}
-#if defined(CONFIG_SPI_NAND_EMMC_COMPATIBLE) || defined(CONFIG_STORE_COMPATIBLE)
-		else if(!run_command("mmcinfo 1", 0)){
-			printk("MMC BOOT, emmc_env_relocate_spec %s %d \n",__func__,__LINE__);
-			env_name_spec = "eMMC";
-			emmc_env_relocate_spec();
-		}
-#endif
-		else{
-			env_name_spec = "None";
-			set_default_env("error init device");
-		}
+#endif // CONFIG_CMD_MMC
+
+	printk("BOOT FROM CARD? env_relocate_spec\n");
+
+#ifdef CONFIG_CMD_SF
+	if(!run_command("sf probe 2", 0)) {
+		printk("SPI BOOT, spi_env_relocate_spec %s %d \n",__func__,__LINE__);
+		env_name_spec = "SPI Flash";
+		extern void spi_env_relocate_spec(void);
+		spi_env_relocate_spec();
+		return;
 	}
+#endif // CONFIG_CMD_SF
+
+#ifdef CONFIG_CMD_NAND
+	if(!run_command("nand exist", 0)) {
+		printk("NAND BOOT, nand_env_relocate_spec %s %d \n",__func__,__LINE__);
+		env_name_spec = "NAND";
+		extern void nand_env_relocate_spec(void);
+		nand_env_relocate_spec();
+		return;
+	}
+#endif // CONFIG_CMD_NAND
+
+#ifdef CONFIG_CMD_MMC
+	if(!run_command("mmcinfo 1", 0)){
+		printk("MMC BOOT, emmc_env_relocate_spec %s %d \n",__func__,__LINE__);
+		env_name_spec = "eMMC";
+		extern void emmc_env_relocate_spec(void);
+		emmc_env_relocate_spec();
+		return;
+	}
+#endif // CONFIG_CMD_MMC
+
+	env_name_spec = "None";
+	set_default_env("error init device");
 }
 
 int saveenv(void)
 {
-	int ret = 0;
-	extern int nand_saveenv(void);
-	extern int spi_saveenv(void);
-	extern int emmc_saveenv(void);
+#ifdef CONFIG_CMD_NAND
 #ifdef CONFIG_STORE_COMPATIBLE
-	if(device_boot_flag == NAND_BOOT_FLAG){
+	if(device_boot_flag == NAND_BOOT_FLAG) {
 #else
-	if(POR_NAND_BOOT()){
+	if(POR_NAND_BOOT()) {
 #endif
 		printk("NAND BOOT,nand_saveenv :%s %d \n",__func__,__LINE__);
-		ret = nand_saveenv();
+		extern int nand_saveenv(void);
+		return nand_saveenv();
+	}
+#endif // CONFIG_CMD_NAND
+
+#ifdef CONFIG_CMD_SF
 #ifdef CONFIG_STORE_COMPATIBLE
-	}else if((device_boot_flag == SPI_EMMC_FLAG)||(device_boot_flag == SPI_NAND_FLAG)){
+	if((device_boot_flag == SPI_EMMC_FLAG) || (device_boot_flag == SPI_NAND_FLAG)){
 #else
-	}else if(POR_SPI_BOOT()){
+	if(POR_SPI_BOOT()){
 #endif
 		printk("SPI BOOT,spi_saveenv : %s %d \n",__func__,__LINE__);
-		ret = spi_saveenv();
+		extern int spi_saveenv(void);
+		return spi_saveenv();
 	}
-#if defined(CONFIG_SPI_NAND_EMMC_COMPATIBLE) || defined(CONFIG_STORE_COMPATIBLE)
+#endif // CONFIG_CMD_SF
+
+#ifdef CONFIG_CMD_MMC
 #ifdef CONFIG_STORE_COMPATIBLE
-	else if(device_boot_flag == EMMC_BOOT_FLAG){
+	if(device_boot_flag == EMMC_BOOT_FLAG) {
 #else
-	else if(POR_EMMC_BOOT()){
+	if(POR_EMMC_BOOT()){
 #endif
 		printk("MMC BOOT,emmc_saveenv : %s %d \n",__func__,__LINE__);
-		ret = emmc_saveenv();
+		extern int emmc_saveenv(void);
+		return emmc_saveenv();
 	}
-#endif
+#endif // CONFIG_CMD_MMC
 
 #ifdef CONFIG_STORE_COMPATIBLE
-	else if (device_boot_flag == CARD_BOOT_FLAG){
+	if (device_boot_flag == CARD_BOOT_FLAG){
 #else
-	else if(POR_CARD_BOOT()){
+	if(POR_CARD_BOOT()){
 #endif
 		printk("BOOT FROM CARD?\n");
+
+#ifdef CONFIG_CMD_SF
 		if(!run_command("sf probe 2", 0)){
 			printk("SPI BOOT, spi_saveenv %s %d \n",__func__,__LINE__);
 			env_name_spec = "SPI Flash";
-			spi_saveenv();
-		}else if(!run_command("nand exist", 0)){
+			extern int spi_saveenv(void);
+			return spi_saveenv();
+		}
+#endif // CONFIG_CMD_SF
+		
+#ifdef CONFIG_CMD_NAND
+		if(!run_command("nand exist", 0)){
 			printk("NAND BOOT, nand_saveenv %s %d \n",__func__,__LINE__);
 			env_name_spec = "NAND";
-			nand_saveenv();
-		}	
-#if defined(CONFIG_SPI_NAND_EMMC_COMPATIBLE) || defined(CONFIG_STORE_COMPATIBLE)
-		else if(!run_command("mmcinfo 1", 0)){
+			extern int nand_saveenv(void);
+			return nand_saveenv();
+		}
+#endif // CONFIG_CMD_NAND
+
+#ifdef CONFIG_CMD_MMC
+		if(!run_command("mmcinfo 1", 0)){
 			printk("MMC BOOT, emmc_saveenv %s %d \n",__func__,__LINE__);
 			env_name_spec = "eMMC";
-			emmc_saveenv();
+			extern int emmc_saveenv(void);
+			return emmc_saveenv();
 		}
-#endif		
-		else{
-			printk("error init devices, saveenv fail\n");
-		}
+#endif // CONFIG_CMD_MMC
 	}
-
-	return ret;
+	
+	printk("error init devices, saveenv fail\n");
+	return -1;
 }
 
 #endif

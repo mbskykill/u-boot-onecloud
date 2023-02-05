@@ -225,7 +225,9 @@ int env_import(const char *buf, int check)
         }else if(ep->data[0] == 0xff){
 			printf("check env data = 0xff, set default env\n");
 			set_default_env("!check env data is 0xff");
+#ifdef CONFIG_CMD_SAVEENV
 			saveenv();
+#endif
 			return 0;
  		}
 	}

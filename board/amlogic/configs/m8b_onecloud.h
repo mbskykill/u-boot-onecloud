@@ -44,14 +44,15 @@
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//                                     SDIO
+//                                     Store
 // =============================================================================
-// cart type of each port
-#define PORT_B_CARD_TYPE	(CARD_TYPE_SD)
-#define PORT_C_CARD_TYPE	(CARD_TYPE_MMC)
+#define CONFIG_STORE_COMPATIBLE
 
 #define CONFIG_SDIO_B		1
+#define PORT_B_CARD_TYPE	(CARD_TYPE_SD)
+
 #define CONFIG_SDIO_C		1
+#define PORT_C_CARD_TYPE	(CARD_TYPE_MMC)
 // =============================================================================
 
 
@@ -97,7 +98,11 @@
 
 #define CONFIG_CMD_AUTOSCRIPT
 // #define CONFIG_CMD_BOOTD
-#define CONFIG_CMD_IMGREAD
+
+#ifdef CONFIG_STORE_COMPATIBLE
+	#define CONFIG_NEXT_NAND	// `store` sub-system
+	#define CONFIG_CMD_IMGREAD
+#endif
 #define CONFIG_CMD_IMGPACK
 
 #define CONFIG_CMD_CPU_TEMP
@@ -138,9 +143,11 @@
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //                                   USB Burn
 // =============================================================================
-#define CONFIG_AML_V2_USBTOOL
-#ifdef CONFIG_AML_V2_USBTOOL
-	#define CONFIG_SHA1
+#ifdef CONFIG_STORE_COMPATIBLE
+	#define CONFIG_AML_V2_USBTOOL
+	#ifdef CONFIG_AML_V2_USBTOOL
+		#define CONFIG_SHA1
+	#endif
 #endif
 // =============================================================================
 
@@ -251,33 +258,13 @@
 //                        Environment variables Storages
 // =============================================================================
 #define CONFIG_ENV_SIZE						(64*1024)
+#define CONFIG_CMD_SAVEENV
+#define CONFIG_ENV_OVERWRITE
 
-#define CONFIG_STORE_COMPATIBLE
-#ifdef CONFIG_STORE_COMPATIBLE
-	#define CONFIG_ENV_OVERWRITE
-
-	#define CONFIG_CMD_SAVEENV
-
-	// SPI
-	#define CONFIG_CMD_SF
-	#define CONFIG_ENV_SECT_SIZE			(0x1000)
-	#define CONFIG_ENV_IN_SPI_OFFSET		(0x100000)
-
-	// NAND
-	#define CONFIG_CMD_NAND
-	#define CONFIG_NEXT_NAND
-	// #define CONFIG_ENV_IN_NAND_OFFSET	(0x400000)
-	// #define CONFIG_ENV_BLOCK_NUM			(2)
-
-	// eMMC
-	#define CONFIG_SYS_MMC_ENV_DEV			(1)
-	#define CONFIG_ENV_IN_EMMC_OFFSET		(0x80000)
-#else
-	#define CONFIG_CMD_SAVEENV
-
+#ifndef CONFIG_STORE_COMPATIBLE
 	#define CONFIG_ENV_IS_IN_MMC
 	#define CONFIG_SYS_MMC_ENV_DEV			(1)
-	#define CONFIG_ENV_OFFSET				(0x1000000)
+	#define CONFIG_ENV_OFFSET				(0x800000)
 #endif
 // =============================================================================
 

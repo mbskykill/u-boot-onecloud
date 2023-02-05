@@ -89,7 +89,7 @@ bool emmckey_is_access_range_legal (struct mmc *mmc, ulong start, lbaint_t blkcn
 	struct aml_emmckey_info_t *emmckey_info;
 	emmckey_info = mmc->aml_emmckey_info;
 #endif
-	if(aml_is_emmc_tsd(mmc)){
+	if (aml_is_boot_device(mmc)) { // is boot device
 		
 #ifdef CONFIG_STORE_COMPATIBLE
 	#ifdef CONFIG_SECURITYKEY
@@ -1385,7 +1385,7 @@ int mmc_init(struct mmc *mmc)
         mmc->is_inited = true; // init OK
     }
 
-    if (aml_is_emmc_tsd(mmc)) { // eMMC OR TSD
+    if (aml_is_boot_device(mmc)) { // is boot device
 #if defined (CONFIG_PARTITIONS_STORE)
        if (0 == is_init_partition_flag) {
             mmc_device_partitions(mmc);

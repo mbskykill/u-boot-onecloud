@@ -67,7 +67,7 @@ ifeq ($(CONFIG_NEXT_NAND),y)
 COBJS-$(CONFIG_ENV_IS_IN_AML_NAND) += env_amlnf.o
 endif
 
-#COBJS-y += partition_table.o
+COBJS-y += partition_table.o
 COBJS-$(CONFIG_NEXT_NAND) += partition_table.o
 
 ifneq ($(CONFIG_NEXT_NAND),y)
@@ -81,7 +81,12 @@ COBJS-$(CONFIG_ENV_IS_IN_ONENAND) += env_onenand.o
 COBJS-$(CONFIG_ENV_IS_IN_SPI_FLASH) += env_sf.o
 COBJS-$(CONFIG_ENV_IS_NOWHERE) += env_nowhere.o
 COBJS-$(CONFIG_ENV_IS_IN_EMMC) += env_emmc.o
-COBJS-$(CONFIG_STORE_COMPATIBLE) += env_amlnf.o env_sf.o env_mmc.o env_switch.o
+ifeq ($(CONFIG_STORE_COMPATIBLE),y)
+COBJS-y += env_switch.o
+COBJS-$(CONFIG_CMD_NAND) += env_amlnf.o
+COBJS-$(CONFIG_CMD_SF) += env_sf.o
+COBJS-$(CONFIG_CMD_MMC) += env_mmc.o
+endif
 COBJS-$(CONFIG_SPI_NAND_COMPATIBLE) += env_amlnand.o env_sf.o env_switch.o
 COBJS-$(CONFIG_SPI_NAND_EMMC_COMPATIBLE) += env_amlnand.o env_sf.o env_mmc.o env_switch.o
 # command

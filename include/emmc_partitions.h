@@ -27,20 +27,20 @@
 #define     MAX_MMC_PART_NUM                16
 #define     MAX_MMC_PART_NAME_LEN           16
 
-#define     PARTITION_RESERVED              (8*SZ_1M)  // 8MB
-#define     MMC_BOOT_PARTITION_RESERVED     (32*SZ_1M) // 32MB
+#define     PARTITION_RESERVED              (0 * SZ_1M)
+#define     MMC_BOOT_PARTITION_RESERVED     (0 * SZ_1M)
 
 #define     MMC_BOOT_NAME                   "bootloader"
-#define     MMC_BOOT_DEVICE_SIZE            (0x4*SZ_1M)
+#define     MMC_BOOT_DEVICE_SIZE            (4 * SZ_1M)
 
 #define     MMC_RESERVED_NAME               "reserved"
-#define     MMC_RESERVED_SIZE               (64*SZ_1M)
+#define     MMC_RESERVED_SIZE               (4 * SZ_1M)
 
 #define     MMC_CACHE_NAME                  "cache"
 // #define     MMC_CACHE_SIZE                  (512*SZ_1M) // this is not used and should be get from spl
 
 #define     MMC_ENV_NAME                    "env"
-#define     MMC_ENV_SIZE                    (8*SZ_1M)
+#define     MMC_ENV_SIZE                    (4*SZ_1M)
 
 // #define     MMC_KEY_NAME                    "key"
 // #define     MMC_KEY_SIZE                    (0x1*SZ_1M)

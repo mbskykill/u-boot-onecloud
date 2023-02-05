@@ -52,6 +52,7 @@
 #include <asm/cache.h>
 
 #include <asm/arch/reboot.h>
+#include <asm/arch/romboot.h>
 #include <partition_table.h>
 
 
@@ -534,7 +535,10 @@ unsigned int emmc_init(void)
 {
     int ret = -1;
     struct mmc *mmc = NULL;
-	mmc = find_mmc_device(1);
+	if(C_ROM_BOOT_DEBUG->boot_id != 1) // boot from eMMC or USB
+		mmc = find_mmc_device(1);
+	else // boot from SDCard
+		mmc = find_mmc_device(0);
 	if (mmc) {
 		ret = mmc_init(mmc); // init eMMC/tSD+    
 	}
@@ -546,143 +550,80 @@ extern int spi_env_relocate_spec(void);
 extern int get_storage_device_flag(void);
 void get_device_boot_flag(void)
 {
-	unsigned init_flag = 0;
-	int ret=0;
-	if(POR_NAND_BOOT()){
-		printf("enter nand boot\n");
-		//try nand first
-		device_boot_flag = NAND_BOOT_FLAG;
-		ret = amlnf_init(0x5);
-		if(ret){  //failed, try spi and eMMC
-			printf("NAND boot, but nand init failed\n");
-			init_flag = spi_env_relocate_spec();
-			if(init_flag){
-				device_boot_flag = EMMC_BOOT_FLAG;
-				printf("NAND boot,spi init failed\n");
-			}
-			else{
-				device_boot_flag=SPI_BOOT_FLAG;
-			}
-			//try eMMC init
-			ret = emmc_init();
-			if(ret){
-				printf("NAND boot, eMMC init failed\n");
-			}
-			
-			if(ret && init_flag){
-			//error case
-				device_boot_flag = CARD_BOOT_FLAG;
-			}
-			else if(init_flag && (ret == 0)){
-				device_boot_flag = EMMC_BOOT_FLAG;
-			}
-			else if((init_flag == 0) && ret){
-				device_boot_flag = CARD_BOOT_FLAG;
-			}
-			else{
-				device_boot_flag = SPI_EMMC_FLAG;
-			}
-		}
-	}
-	else if(POR_EMMC_BOOT()){
-	//try nand first
-		printf("enter emmc boot\n");
-		device_boot_flag = EMMC_BOOT_FLAG;
-		ret = emmc_init();
-		if(ret){  //failed, try spi and eMMC
-			printf("EMMC boot, but emmc init failed\n");
-			init_flag = spi_env_relocate_spec();
-			if(init_flag){
+	device_boot_flag = CARD_BOOT_FLAG;
+	int failed = false;
+
+	while(true) {
+#ifdef CONFIG_CMD_NAND
+		if(failed || POR_NAND_BOOT()) {
+			if(failed && POR_NAND_BOOT())
+				return;
+
+			printf("try nand boot\n");
+			if(amlnf_init(0x5) == 0) {
 				device_boot_flag = NAND_BOOT_FLAG;
-				printf("EMMC boot, spi init failed\n");
+				return;
 			}
-			else{
-				device_boot_flag = SPI_BOOT_FLAG;
-			}
-			
-			ret = amlnf_init(0x5);
-			if(ret){
-				printf("EMMC boot, nand init failed\n");
-			}
-			
-			if(ret && init_flag){
-			//error case
-				device_boot_flag = CARD_BOOT_FLAG;
-			}
-			else if(init_flag && (ret == 0)){
-				device_boot_flag = NAND_BOOT_FLAG;
-			}
-			else if((init_flag == 0) && ret){
-				device_boot_flag = CARD_BOOT_FLAG;
-			}
-			else{
-				device_boot_flag = SPI_NAND_FLAG;
-			}
+			failed = true;
 		}
-	}
-	else{  //SPI boot or other case, shoulde init all the device here.
-	//for SPI boot, init env first+        
-		printf("enter spi boot\n");
-		ret = spi_env_relocate_spec();
-		if(ret == 0){
-			printf("spi success\n");
-			device_boot_flag = get_storage_device_flag();
-			if(device_boot_flag == SPI_EMMC_FLAG){
-				ret = emmc_init();
-				if(ret){
-					device_boot_flag = CARD_BOOT_FLAG;
-					printf("eMMC init failed for SPI boot\n");
-				}
+#endif // CONFIG_CMD_NAND
+
+#ifdef CONFIG_CMD_MMC
+		if(failed || POR_EMMC_BOOT()) {
+			if(failed && POR_EMMC_BOOT())
+				return;
+
+			printf("try emmc boot\n");
+			if(emmc_init() == 0) {
+				device_boot_flag = EMMC_BOOT_FLAG;
+				return;
 			}
-			else if(device_boot_flag == SPI_NAND_FLAG){
-				ret = amlnf_init(0x5);
-				if (ret) {
-					device_boot_flag = CARD_BOOT_FLAG;
-					printf("nand init failed for SPI boot\n");
-				}
-			}
-			else{
-				// try nand first
-				device_boot_flag = SPI_BOOT_FLAG;
-				init_flag = amlnf_init(0x5);
-				if(init_flag){
-					//then try emmc
-					init_flag = emmc_init();
-					if(init_flag){
+			failed = true;
+		}
+#endif // CONFIG_CMD_MMC
+
+#ifdef CONFIG_CMD_SF
+		if(failed || POR_SPI_BOOT()) {
+			if(failed && POR_SPI_BOOT())
+				return;
+
+			printf("try spi boot\n");
+			if(spi_env_relocate_spec() == 0) {
+				device_boot_flag = get_storage_device_flag();
+
+#ifdef CONFIG_CMD_NAND
+				if(device_boot_flag != SPI_EMMC_FLAG) {
+					printf("try to init nand for spi boot\n");
+					if(amlnf_init(0x5) == 0) {
+						device_boot_flag = SPI_NAND_FLAG;
+						return;
+					} else if(device_boot_flag == SPI_NAND_FLAG) {
 						device_boot_flag = CARD_BOOT_FLAG;
-						printf("nand init failed for SPI boot\n");
+						return;
 					}
-					else{
+				}
+#endif // CONFIG_CMD_NAND
+
+#ifdef CONFIG_CMD_MMC
+				if(device_boot_flag != SPI_NAND_FLAG) {
+					printf("try to init eMMC for spi boot\n");
+					if(amlnf_init(0x5) == 0) {
 						device_boot_flag = SPI_EMMC_FLAG;
+						return;
+					} else if(device_boot_flag == SPI_EMMC_FLAG) {
+						device_boot_flag = CARD_BOOT_FLAG;
+						return;
 					}
 				}
-				else{
-					device_boot_flag = SPI_NAND_FLAG;
-				}
+#endif // CONFIG_CMD_MMC
+
+				device_boot_flag = CARD_BOOT_FLAG;
+				return;
 			}
+			failed = true;
 		}
-		else{
-			//try nand first
-			device_boot_flag = NAND_BOOT_FLAG;
-			init_flag = amlnf_init(0x5);
-			if(init_flag){
-				//then try emmc
-				device_boot_flag = EMMC_BOOT_FLAG;
-				init_flag = emmc_init();
-				if(init_flag){
-					device_boot_flag = CARD_BOOT_FLAG;
-					printf("nand init failed for spi boot\n");
-				}
-				else{
-					device_boot_flag = EMMC_BOOT_FLAG;
-				}
-			}
-			else{
-				device_boot_flag = NAND_BOOT_FLAG;
-			}
-		}
+#endif // CONFIG_CMD_SF
 	}
-printf("device_boot_flag=%d\n",device_boot_flag);
 }
 #endif
 /************************************************************************

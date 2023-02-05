@@ -174,7 +174,7 @@ static int do_get_img_size(cmd_tbl_t *cmdtp, int flag, int argc, char * const ar
 			sprintf(env_name, "%s", argv[2]);
 			sprintf(env_data, "0x%x", pack_header_p->start + pack_header_p->size);
 			setenv(env_name, env_data);
-			saveenv();
+			// saveenv();
 			break;
 		}
 		else

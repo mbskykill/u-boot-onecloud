@@ -363,7 +363,7 @@ static __inline__ int abortboot(int bootdelay)
 # endif	/* CONFIG_AUTOBOOT_KEYED */
 #endif	/* CONFIG_BOOTDELAY >= 0  */
 
-void force_update(void) {
+/*void force_update(void) {
     int ret=0;
     char* enable = getenv("auto_update_enable");
     if((enable == NULL) || (strcmp(enable, "true") != 0)) {
@@ -381,7 +381,7 @@ void force_update(void) {
     if(ret) return;
     printf("force update.\n");
     ret = run_command("run prepare;run storeargs;run recovery", 0);
-}
+}*/
 
 /****************************************************************************/
 
@@ -528,7 +528,7 @@ extern void init_secure_firmware(void);
 	cvbs_performance_config();
 #endif
 
-	force_update();
+	// force_update();
 
 	AML_LOG_TE("main");
 

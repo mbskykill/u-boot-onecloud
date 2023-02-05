@@ -19,7 +19,9 @@
 #define STORE_BOOT_ERASE_ALL   				          3
 #define STORE_BOOT_SCRUB_ALL				          4
 
+#ifdef CONFIG_CMD_SF
 #define _SPI_FLASH_ERASE_SZ      (CONFIG_ENV_IN_SPI_OFFSET + CONFIG_ENV_SIZE)
+#endif
 
 //Ignore mbr since mmc driver already handled 
 //#define MMC_UBOOT_CLEAR_MBR
@@ -135,7 +137,9 @@ int do_store(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 					return -1;
 				}
 				return ret;
-			}else if((device_boot_flag==SPI_EMMC_FLAG)||(device_boot_flag==SPI_NAND_FLAG)){
+			}
+#ifdef CONFIG_CMD_SF
+			if((device_boot_flag==SPI_EMMC_FLAG)||(device_boot_flag==SPI_NAND_FLAG)){
 				off =  simple_strtoul(argv[3], NULL, 16);
 				size =  simple_strtoul(argv[4], NULL, 16);
 
@@ -153,7 +157,9 @@ int do_store(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 					return -1;
 				}
 				return ret;
-			}else if(device_boot_flag == EMMC_BOOT_FLAG){
+			}
+#endif // CONFIG_CMD_SF
+			if(device_boot_flag == EMMC_BOOT_FLAG){
 				off =  simple_strtoul(argv[3], NULL, 16);
 				size =  simple_strtoul(argv[4], NULL, 16);
 
@@ -617,7 +623,8 @@ R_SWITCH_BACK:
 				return -1;
 			}
 		}
-		else if(device_boot_flag == SPI_NAND_FLAG){
+#ifdef CONFIG_CMD_SF
+		if(device_boot_flag == SPI_NAND_FLAG){
 				store_dbg("spi+nand , %s %d ",__func__,__LINE__);
 				ret = run_command(str, 0);
 				if(ret != 0){
@@ -637,7 +644,7 @@ R_SWITCH_BACK:
 				}
 				return ret;
 		}
-		else if(device_boot_flag == SPI_EMMC_FLAG){
+		if(device_boot_flag == SPI_EMMC_FLAG){
 				store_dbg("spi+mmc , %s %d ",__func__,__LINE__);
 				ret = run_command("mmc erase whole",0);
 				if(ret != 0){
@@ -646,6 +653,7 @@ R_SWITCH_BACK:
 				}
 				return ret;
 		}
+#endif // CONFIG_CMD_SF
 		else if(device_boot_flag==EMMC_BOOT_FLAG){
 			store_dbg("MMC BOOT, %s %d \n",__func__,__LINE__);
             device_boot_flag = EMMC_BOOT_FLAG;		
@@ -699,7 +707,8 @@ R_SWITCH_BACK:
 			}
 			return ret;
 		}
-        else if((device_boot_flag==SPI_EMMC_FLAG)||(device_boot_flag==SPI_NAND_FLAG))
+#ifdef CONFIG_CMD_SF
+        if((device_boot_flag==SPI_EMMC_FLAG)||(device_boot_flag==SPI_NAND_FLAG))
         {
 /*
 			if(device_boot_flag == -1)
@@ -801,7 +810,8 @@ R_SWITCH_BACK:
 			
 			return ret;
         }
-        else if(device_boot_flag == EMMC_BOOT_FLAG){
+#endif // CONFIG_CMD_SF
+        if(device_boot_flag == EMMC_BOOT_FLAG){
                 store_dbg("MMC BOOT, %s %d \n",__func__,__LINE__);
                 device_boot_flag = EMMC_BOOT_FLAG;		
                 ret = run_command("mmcinfo 1", 0);
